@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>TAP — NFC-карты для кафе и ресторанов в Астане</title>
+<meta name="description" content="NFC-карты и тейбл-тенты для заведений в Астане: гость касается карты телефоном и сразу оставляет отзыв в 2GIS и Google или открывает меню. От 5 000 ₸, дизайн по брендбуку.">
+<meta property="og:title" content="TAP — NFC-карты для кафе и ресторанов">
+<meta property="og:description" content="Отзыв на выходе. Меню за столом. Одним касанием.">
+<meta property="og:image" content="tap_poster.jpg">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0f0d0c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f0d0c'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23ff5a1f'/%3E%3C/svg%3E">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: «вечерний зал» — тёмная сцена как в видео-презентации; путь гостя по залу (касса → выход, стол → бар → ожидание) ведёт по странице; один оранжевый сигнал = момент касания */
+:root{
+  color-scheme:dark;
+  --bg:#0f0d0c; --bg-2:#161311; --surface:#1c1816; --line:#2c2622; --line-2:#3a332e;
+  --fg:#f3efe8; --muted:#958d84; --dim:#5f5852;
+  --accent:#ff5a1f; --accent-2:#ff8a57; --accent-ink:#1a0700; --ok:#3ccf86;
+  --paper:#f2efe9; --paper-ink:#141210;
+  --f-display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --f-body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:17px;line-height:1.55;overflow-x:hidden;-webkit-font-smoothing:antialiased;
+  background-image:linear-gradient(var(--bg-2) 1px,transparent 1px),linear-gradient(90deg,var(--bg-2) 1px,transparent 1px);background-size:56px 56px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:50;background:var(--bg)}
+a{color:inherit}
+h1,h2,h3{font-family:var(--f-display);margin:0;line-height:1.05;letter-spacing:-.02em;text-wrap:balance;font-weight:700}
+p{margin:0}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:8px}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+section{padding-block:clamp(72px,9vw,128px);position:relative}
+.mono{font-family:var(--f-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.muted{color:var(--muted)}
+.acc{color:var(--accent)}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;color:var(--muted)}
+.eyebrow::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent)}
+.h2{font-size:clamp(32px,4.8vw,64px)}
+.lead{font-size:clamp(17px,1.5vw,19px);color:var(--muted);max-width:58ch}
+.head{display:grid;gap:18px;max-width:860px;margin-bottom:clamp(36px,5vw,64px)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:12px;padding:17px 24px;border-radius:14px;font-weight:600;font-size:16px;text-decoration:none;border:1px solid transparent;cursor:pointer;transition:transform .2s,background .2s,border-color .2s;white-space:nowrap}
+.btn:hover{transform:translateY(-2px)}
+.btn-acc{background:var(--accent);color:var(--accent-ink)}
+.btn-acc:hover{background:var(--accent-2)}
+.btn-line{border-color:var(--line-2)}
+.btn-line:hover{border-color:var(--fg)}
+.btn-paper{background:var(--paper);color:var(--paper-ink)}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:color-mix(in srgb,var(--bg) 84%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:20px;height:66px}
+.logo{font-family:var(--f-display);font-weight:900;font-size:22px;letter-spacing:-.03em;text-decoration:none;display:inline-flex;align-items:baseline;gap:2px}
+.logo i{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
+.nav{display:flex;gap:26px;font-size:15px}
+.nav a{text-decoration:none;color:var(--muted)}
+.nav a:hover{color:var(--fg)}
+.top .btn{padding:11px 18px;font-size:14px;border-radius:12px}
+@media (max-width:920px){.nav{display:none}}
+
+/* hero */
+.hero{padding-block:clamp(40px,6vw,88px) clamp(56px,7vw,100px)}
+.hero-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:clamp(32px,6vw,90px);align-items:center}
+.hero-copy{display:grid;gap:28px;min-width:0}
+.hero h1{font-size:clamp(40px,6.4vw,92px);font-weight:900;letter-spacing:-.045em;line-height:.98}
+.hero h1 .ln{display:block}
+.hero h1 .acc{position:relative}
+.hero-sub{font-size:clamp(17px,1.6vw,20px);color:var(--muted);max-width:46ch}
+.hero-ctas{display:flex;flex-wrap:wrap;gap:10px}
+.facts{display:flex;flex-wrap:wrap;gap:10px 28px;padding-top:24px;border-top:1px solid var(--line)}
+.facts div{display:grid;gap:2px}
+.facts b{font-family:var(--f-display);font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.facts span{font-size:14px;color:var(--muted)}
+.vframe{position:relative;width:100%;max-width:360px;margin-inline:auto;aspect-ratio:9/16;border-radius:30px;overflow:hidden;background:#000;border:1px solid var(--line-2);box-shadow:0 60px 120px -40px color-mix(in srgb,var(--accent) 35%,transparent)}
+.vframe video{width:100%;height:100%;object-fit:cover;display:block}
+.chapters{list-style:none;margin:16px auto 0;padding:0;max-width:360px;display:flex;flex-wrap:wrap;gap:6px}
+.chapters button{border:1px solid var(--line-2);background:transparent;border-radius:99px;padding:7px 12px;font-size:13px;cursor:pointer;color:var(--muted);display:inline-flex;gap:8px;align-items:center}
+.chapters button .mono{font-size:10.5px}
+.chapters button.on{border-color:var(--accent);color:var(--fg)}
+@media (max-width:860px){.hero-grid{grid-template-columns:1fr}}
+
+/* scenario timelines */
+.scn{border-top:1px solid var(--line)}
+.scn-top{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,5vw,72px);align-items:end;margin-bottom:clamp(36px,5vw,64px)}
+.scn-top h2{font-size:clamp(36px,6vw,84px);font-weight:900;letter-spacing:-.04em}
+@media (max-width:820px){.scn-top{grid-template-columns:1fr}}
+.lane{display:grid;grid-template-columns:150px 1fr;gap:20px;padding-block:22px;border-top:1px solid var(--line)}
+.lane-l{display:grid;gap:4px;align-content:start}
+.lane-l b{font-family:var(--f-display);font-size:18px}
+.track{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;position:relative}
+.ev{position:relative;border-radius:16px;padding:16px 16px 18px;background:var(--surface);border:1px solid var(--line);display:grid;gap:8px;align-content:start;min-width:0}
+.ev time{font-family:var(--f-mono);font-size:12px;color:var(--dim)}
+.ev p{font-size:15.5px;line-height:1.4}
+.ev q{font-style:italic;color:var(--fg)}
+.ev.lost{background:transparent;border-style:dashed;border-color:var(--line-2)}
+.ev.lost p{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--accent);text-decoration-thickness:2px}
+.ev.hit{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.ev.hit time{color:inherit;opacity:.75}
+.ev.hit .big{font-family:var(--f-display);font-size:32px;font-weight:900;letter-spacing:-.03em;line-height:1}
+.stars{color:var(--accent);letter-spacing:2px}
+@media (max-width:980px){.lane{grid-template-columns:1fr}.track{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:460px){.track{grid-template-columns:1fr}}
+.verdict{margin-top:clamp(40px,6vw,80px);font-family:var(--f-display);font-weight:700;font-size:clamp(24px,3.4vw,46px);line-height:1.12;letter-spacing:-.02em;max-width:24ch}
+.trio{margin-top:clamp(36px,5vw,56px);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.trio div{display:grid;gap:8px;align-content:start;padding-top:16px;border-top:2px solid var(--accent)}
+.trio b{font-family:var(--f-display);font-size:18px}
+.trio p{color:var(--muted);font-size:15.5px}
+@media (max-width:820px){.trio{grid-template-columns:1fr}}
+
+/* hall plan */
+.plan-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(28px,5vw,64px);align-items:start}
+.hall{position:relative;border-radius:24px;border:1px solid var(--line);background:var(--bg-2);overflow:hidden;max-width:100%}
+.hall svg{display:block;width:100%;height:auto}
+.hall .lbl{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;fill:var(--dim)}
+.pt{cursor:pointer}
+.pt circle.core{fill:var(--surface);stroke:var(--line-2);stroke-width:2;transition:fill .2s,stroke .2s}
+.pt.r circle.core{stroke:var(--accent)}
+.pt text{font-family:var(--f-mono);font-size:11px;fill:var(--fg);pointer-events:none}
+.pt.on circle.core{fill:var(--accent);stroke:var(--accent)}
+.pt.on text{fill:var(--accent-ink)}
+.pt .pulse{fill:none;stroke:var(--accent);stroke-width:2;opacity:0}
+.pt.on .pulse{animation:pulse 1.8s ease-out infinite}
+@keyframes pulse{0%{r:16;opacity:.9}100%{r:44;opacity:0}}
+.path{fill:none;stroke:var(--line-2);stroke-width:2;stroke-dasharray:5 8}
+.ptabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.ptab{border:1px solid var(--line-2);background:transparent;border-radius:12px;padding:10px 14px;font-size:15px;font-weight:600;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.ptab .d{width:8px;height:8px;border-radius:50%;border:2px solid var(--accent)}
+.ptab .d.m{border-color:var(--fg)}
+.ptab[aria-selected="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.ptab[aria-selected="true"] .d.m{border-color:var(--bg)}
+.pinfo{display:grid;gap:18px;min-width:0}
+.tag{justify-self:start;font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:6px 11px;border-radius:99px;border:1px solid var(--line-2);color:var(--muted)}
+.tag.r{border-color:var(--accent);color:var(--accent)}
+.pinfo h3{font-size:clamp(24px,2.6vw,34px)}
+.pinfo > p{color:var(--muted)}
+.pinfo dl{margin:0;display:grid;border-top:1px solid var(--line)}
+.pinfo dl div{display:grid;grid-template-columns:120px 1fr;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}
+.pinfo dt{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);padding-top:3px}
+.pinfo dd{margin:0;font-size:15.5px}
+.legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:14px;color:var(--muted)}
+.legend span{display:inline-flex;gap:8px;align-items:center}
+.lg{width:12px;height:12px;border-radius:50%;border:2px solid var(--accent);display:inline-block}
+.lg.m{border-color:var(--line-2)}
+@media (max-width:900px){.plan-grid{grid-template-columns:1fr}}
+@media (max-width:480px){.pinfo dl div{grid-template-columns:1fr;gap:4px}}
+
+/* phone features */
+.feat{display:grid;grid-template-columns:1fr 320px;gap:clamp(32px,6vw,96px);align-items:center}
+.ftabs{display:grid;min-width:0}
+.ftab{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:44px 1fr;gap:6px 18px;padding:24px 0;border-top:1px solid var(--line)}
+.ftab:last-child{border-bottom:1px solid var(--line)}
+.ftab .k{font-family:var(--f-display);font-weight:900;font-size:22px;color:var(--dim)}
+.ftab h3{font-size:clamp(24px,3vw,40px);color:var(--dim);transition:color .25s}
+.ftab p{grid-column:2;color:var(--muted);max-width:52ch;display:none}
+.ftab[aria-selected="true"] h3{color:var(--fg)}
+.ftab[aria-selected="true"] .k{color:var(--accent)}
+.ftab[aria-selected="true"] p{display:block}
+.ftab:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+.phone{position:relative;width:100%;max-width:290px;margin-inline:auto;aspect-ratio:9/19.3;border-radius:44px;background:#0a0908;padding:10px;border:1.5px solid var(--line-2);box-shadow:0 50px 100px -40px color-mix(in srgb,var(--accent) 40%,transparent)}
+.scr{position:relative;width:100%;height:100%;border-radius:35px;overflow:hidden;background:var(--paper);color:var(--paper-ink)}
+.island{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:32%;height:22px;border-radius:20px;background:#0a0908;z-index:2}
+.view{position:absolute;inset:0;padding:54px 18px 20px;display:flex;flex-direction:column;gap:11px;font-size:13.5px;transition:opacity .4s,transform .4s}
+.view[hidden]{display:flex!important;opacity:0;transform:translateY(10px);pointer-events:none}
+.v-top{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:10px;color:#7a746d}
+.v-pill{align-self:flex-start;font-family:var(--f-mono);font-size:10px;padding:5px 10px;border-radius:99px;background:var(--paper-ink);color:var(--paper)}
+.v-title{font-family:var(--f-display);font-weight:700;font-size:19px;line-height:1.1;letter-spacing:-.02em}
+.v-sub{color:#6d665f;font-size:13px}
+.v-stars{font-size:28px;color:var(--accent);letter-spacing:3px}
+.v-btn{display:flex;justify-content:space-between;padding:13px 15px;border-radius:12px;font-weight:600}
+.v-btn.g{background:#2a9d5c;color:#fff}
+.v-btn.k{background:var(--paper-ink);color:var(--paper)}
+.v-btn.l{border:1px solid #d6d0c7}
+.v-btn.ig{background:linear-gradient(90deg,#833ab4,#e1306c,#f77737);color:#fff}
+.v-btn.wa{background:#25d366;color:#04300f}
+.v-row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #e0dad1}
+.v-row span{font-family:var(--f-mono);color:#c2410c;white-space:nowrap}
+.v-av{width:80px;height:80px;border-radius:50%;padding:3px;background:conic-gradient(#f77737,#e1306c,#833ab4,#f77737);align-self:center}
+.v-av div{width:100%;height:100%;border-radius:50%;background:var(--paper-ink);color:var(--paper);display:grid;place-items:center;font-family:var(--f-display);font-weight:900;font-size:24px;border:3px solid var(--paper)}
+@media (max-width:860px){.feat{grid-template-columns:1fr}.phone{max-width:250px}}
+
+/* configurator */
+.cfg-sec{background:var(--bg-2);border-block:1px solid var(--line)}
+.cfg{display:grid;grid-template-columns:1fr 1fr;gap:clamp(32px,5vw,72px);align-items:center}
+.stage{position:relative;aspect-ratio:1;width:100%;max-width:520px;margin-inline:auto;border-radius:28px;border:1px solid var(--line);background:radial-gradient(60% 55% at 50% 50%,color-mix(in srgb,var(--accent) 16%,var(--bg)),var(--bg));display:grid;place-items:center;overflow:hidden;perspective:1200px}
+.stage .ghost{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--f-display);font-weight:900;font-size:clamp(64px,12vw,150px);letter-spacing:-.05em;color:transparent;-webkit-text-stroke:1px var(--line-2);pointer-events:none;user-select:none}
+.card{--w:220px;--h:340px;--r:20px;--c:#141210;--ink:#f3efe8;--clip:none;position:relative;width:var(--w);height:var(--h);border-radius:var(--r);clip-path:var(--clip);background:var(--c);color:var(--ink);display:flex;flex-direction:column;justify-content:space-between;padding:9% 10%;transform:rotateX(var(--rx,8deg)) rotateY(var(--ry,-16deg));transition:width .4s,height .4s,border-radius .4s,background .3s,clip-path .4s;box-shadow:0 40px 80px -30px rgba(0,0,0,.7),inset 0 0 0 1px rgba(255,255,255,.08)}
+.card::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.14) 48%,transparent 60%);pointer-events:none}
+.card .cm{font-family:var(--f-display);font-weight:700;font-size:calc(var(--w)*.085);display:flex;justify-content:space-between;align-items:center}
+.card .cm small{font-family:var(--f-mono);font-weight:400;font-size:.4em;letter-spacing:.14em;opacity:.6}
+.rings{width:46%;aspect-ratio:1;align-self:center;position:relative}
+.rings i{position:absolute;border-radius:50%;border:2px solid currentColor}
+.rings i:nth-child(1){inset:0;opacity:.3}
+.rings i:nth-child(2){inset:18%;opacity:.6}
+.rings i:nth-child(3){inset:34%;background:var(--dot,#ff5a1f);border-color:var(--dot,#ff5a1f)}
+.card .cc{font-size:calc(var(--w)*.055);line-height:1.3}
+.card .cc b{display:block;font-family:var(--f-display);font-size:1.2em;margin-bottom:3px}
+.card .cc span{font-family:var(--f-mono);font-size:.75em;opacity:.6;letter-spacing:.06em}
+.stage .hint{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:var(--dim)}
+.ctrls{display:grid;gap:24px;min-width:0}
+.ctrl{display:grid;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:10px 15px;border-radius:12px;border:1px solid var(--line-2);background:transparent;cursor:pointer;font-weight:500;font-size:15px}
+.chip:hover{border-color:var(--fg)}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.sw{width:38px;height:38px;border-radius:50%;cursor:pointer;border:1px solid var(--line-2);padding:0}
+.sw[aria-pressed="true"]{outline:2px solid var(--fg);outline-offset:3px}
+.price-live{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-top:20px;border-top:1px solid var(--line)}
+.price-live b{font-family:var(--f-display);font-size:clamp(34px,3.6vw,44px);font-weight:900;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.price-live span{color:var(--muted);font-size:15px;max-width:30ch}
+.specs{margin-top:clamp(40px,5vw,64px);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.specs div{padding:20px 22px;display:grid;gap:6px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);margin:0 -1px -1px 0}
+.specs dt{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.specs dd{margin:0;font-weight:600}
+@media (max-width:900px){.cfg{grid-template-columns:1fr}.specs{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.specs{grid-template-columns:1fr}}
+
+/* pricing */
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pl{border-radius:24px;padding:clamp(26px,3.4vw,44px);display:grid;gap:24px;align-content:start;background:var(--surface);border:1px solid var(--line);min-width:0}
+.pl.pro{background:var(--paper);color:var(--paper-ink);border-color:var(--paper)}
+.pl.pro .muted{color:#6d665f}
+.pl-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start}
+.pl h3{font-size:24px}
+.badge{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:7px 12px;border-radius:99px;background:var(--accent);color:var(--accent-ink)}
+.cost{font-family:var(--f-display);font-weight:900;font-size:clamp(54px,7vw,92px);line-height:.9;letter-spacing:-.05em;font-variant-numeric:tabular-nums}
+.cost small{font-family:var(--f-body);font-size:16px;font-weight:500;letter-spacing:0;margin-left:6px}
+.pl ul{list-style:none;margin:0;padding:0;display:grid;gap:11px}
+.pl li{display:grid;grid-template-columns:22px 1fr;gap:10px}
+.pl li::before{content:"✓";font-weight:700;color:var(--ok)}
+.pl.pro li::before{color:#c2410c}
+.pl li.no{opacity:.4}
+.pl li.no::before{content:"—";color:inherit}
+.pl.pro .btn-acc{color:var(--accent-ink)}
+.delta{margin-top:28px;display:flex;flex-wrap:wrap;gap:14px;align-items:baseline;font-size:clamp(18px,2vw,22px)}
+.delta b{font-family:var(--f-display);font-weight:900;color:var(--accent);font-size:1.4em}
+@media (max-width:820px){.plans{grid-template-columns:1fr}}
+
+/* chains */
+.ch{display:grid;grid-template-columns:1fr 1fr;gap:clamp(32px,6vw,88px)}
+.ch-l{display:grid;gap:22px;align-content:start;min-width:0}
+.ch-l h2{font-size:clamp(30px,4.2vw,56px)}
+.invite{border-radius:20px;background:var(--surface);border:1px solid var(--line);padding:clamp(20px,3vw,30px);display:grid;gap:14px}
+.invite p{font-size:16px;line-height:1.6}
+.copy-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.ch-list{display:grid;align-content:start;min-width:0}
+.ch-list div{display:grid;gap:4px;padding:20px 0;border-bottom:1px solid var(--line)}
+.ch-list div:first-child{border-top:1px solid var(--line)}
+.ch-list b{font-size:18px}
+.ch-list p{color:var(--muted);font-size:15.5px}
+@media (max-width:900px){.ch{grid-template-columns:1fr}}
+
+/* process + faq */
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border-top:1px solid var(--line)}
+.steps div{display:grid;gap:10px;align-content:start;padding:24px 22px 8px 0;position:relative}
+.steps div::before{content:"";position:absolute;top:-6px;left:0;width:11px;height:11px;border-radius:50%;background:var(--bg);border:2px solid var(--accent)}
+.steps div:last-child::before{background:var(--accent)}
+.steps .mono{color:var(--accent)}
+.steps h3{font-size:19px}
+.steps p{color:var(--muted);font-size:15.5px}
+@media (max-width:900px){.steps{grid-template-columns:1fr 1fr;row-gap:28px}}
+@media (max-width:480px){.steps{grid-template-columns:1fr}}
+.faq{max-width:880px}
+.faq details{border-bottom:1px solid var(--line)}
+.faq details:first-child{border-top:1px solid var(--line)}
+.faq summary{list-style:none;cursor:pointer;padding:22px 0;font-weight:600;font-size:clamp(17px,1.6vw,19px);display:flex;justify-content:space-between;gap:20px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-family:var(--f-display);font-size:24px;line-height:1;color:var(--accent);transition:transform .25s;flex:none}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq details p{color:var(--muted);padding-bottom:22px;max-width:66ch}
+
+/* final */
+.final{background:var(--accent);color:var(--accent-ink);overflow:hidden}
+.final .wrap{display:grid;gap:32px}
+.huge{font-family:var(--f-display);font-weight:900;font-size:clamp(90px,24vw,330px);line-height:.8;letter-spacing:-.06em}
+.final-row{display:grid;grid-template-columns:1fr auto;gap:28px;align-items:end}
+.final-row h2{font-size:clamp(24px,3vw,40px);max-width:22ch}
+.final .btn-dark{background:var(--accent-ink);color:var(--paper)}
+.final .btn-ol{border-color:color-mix(in srgb,var(--accent-ink) 40%,transparent)}
+.contacts{display:flex;flex-wrap:wrap;gap:14px 40px}
+.contacts span{display:grid;gap:4px;opacity:.75}
+.contacts b{font-family:var(--f-body);font-size:16px;font-weight:600;letter-spacing:0;text-transform:none;opacity:1;user-select:all}
+@media (max-width:820px){.final-row{grid-template-columns:1fr}}
+footer{background:var(--accent-ink);color:color-mix(in srgb,var(--paper) 55%,transparent);padding-block:22px}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+
+.wa-fab{display:none}
+@media (max-width:760px){
+  .wa-fab{display:flex;justify-content:center;position:fixed;z-index:45;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));padding:16px 20px;border-radius:14px;background:#25d366;color:#04300f;font-weight:700;text-decoration:none;box-shadow:0 12px 30px -8px rgba(0,0,0,.6)}
+  footer{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
+}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a href="#top" class="logo">TAP<i></i></a>
+    <nav class="nav" aria-label="Разделы">
+      <a href="#reviews">Отзывы</a>
+      <a href="#menu">Меню</a>
+      <a href="#hall">В зале</a>
+      <a href="#design">Дизайн</a>
+      <a href="#pricing">Цены</a>
+      <a href="#chains">Сетям</a>
+    </nav>
+    <a href="https://wa.me/77756961602?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5%21%20%D0%A5%D0%BE%D1%87%D1%83%20%D0%B1%D0%B5%D1%81%D0%BF%D0%BB%D0%B0%D1%82%D0%BD%D1%8B%D0%B9%20%D0%BC%D0%B0%D0%BA%D0%B5%D1%82%20%D0%BA%D0%B0%D1%80%D1%82%D1%8B%20TAP%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B2%D0%BE%D0%B5%D0%B3%D0%BE%20%D0%B7%D0%B0%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D1%8F%3A%20" target="_blank" rel="noopener" class="btn btn-acc">Получить макет</a>
+  </div>
+</header>
+
+<main id="top">
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <span class="eyebrow mono">NFC-карты для кафе и ресторанов · Астана</span>
+      <h1><span class="ln">Отзыв на выходе.</span><span class="ln acc">Меню за столом.</span><span class="ln">Одним касанием.</span></h1>
+      <p class="hero-sub">Карты и тейбл-тенты в стиле вашего заведения. Гость касается карты телефоном, и у него сразу открывается страница отзыва в 2GIS или Google либо актуальное меню. Без камеры и без приложений.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-acc" href="https://wa.me/77756961602?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5%21%20%D0%A5%D0%BE%D1%87%D1%83%20%D0%B1%D0%B5%D1%81%D0%BF%D0%BB%D0%B0%D1%82%D0%BD%D1%8B%D0%B9%20%D0%BC%D0%B0%D0%BA%D0%B5%D1%82%20%D0%BA%D0%B0%D1%80%D1%82%D1%8B%20TAP%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B2%D0%BE%D0%B5%D0%B3%D0%BE%20%D0%B7%D0%B0%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D1%8F%3A%20" target="_blank" rel="noopener">Получить макет бесплатно →</a>
+        <a class="btn btn-line" href="#reviews">Как это работает</a>
+      </div>
+      <div class="facts">
+        <div><b>1 сек</b><span>от касания до страницы</span></div>
+        <div><b>5 000 ₸</b><span>стандартная карта</span></div>
+        <div><b>6 000 ₸</b><span>дизайн под брендбук</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="vframe">
+        <video id="vid" src="tap_presentation.mp4" poster="tap_poster.jpg" muted loop playsinline autoplay preload="metadata" controls></video>
+      </div>
+      <ol class="chapters" aria-label="Разделы видео">
+        <li><button type="button" data-t="0"><span class="mono">0:00</span>Вопрос</button></li>
+        <li><button type="button" data-t="3.5"><span class="mono">0:03</span>Касса</button></li>
+        <li><button type="button" data-t="8.3"><span class="mono">0:08</span>Стол</button></li>
+        <li><button type="button" data-t="12"><span class="mono">0:12</span>Дизайн</button></li>
+        <li><button type="button" data-t="15.3"><span class="mono">0:15</span>Цены</button></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="scn" id="reviews">
+  <div class="wrap">
+    <div class="scn-top">
+      <h2>Убегающий гость</h2>
+      <div style="display:grid;gap:14px">
+        <span class="eyebrow mono">Сценарий А · Отзывы</span>
+        <p class="lead">Довольный гость говорит официанту «обязательно оставлю отзыв», а через минуту уже надевает пальто. Обещание живёт ровно до двери. Уговаривать гостей официантам неловко.</p>
+      </div>
+    </div>
+    <div class="lane">
+      <div class="lane-l"><span class="mono muted">Сейчас</span><b>Без TAP</b></div>
+      <div class="track">
+        <div class="ev"><time>21:40</time><p><q>Всё было очень вкусно, спасибо!</q></p></div>
+        <div class="ev"><time>21:41</time><p><q>Обязательно оставлю вам отзыв.</q></p></div>
+        <div class="ev"><time>21:42</time><p>Такси уже ждёт. Гость спешит к выходу.</p></div>
+        <div class="ev lost"><time>21:43</time><p>Дверь закрылась. Отзыв потерян.</p></div>
+      </div>
+    </div>
+    <div class="lane">
+      <div class="lane-l"><span class="mono acc">С TAP</span><b>На ходу</b></div>
+      <div class="track">
+        <div class="ev"><time>21:41</time><p><q>Обязательно оставлю отзыв.</q></p></div>
+        <div class="ev"><time>21:42</time><p>По пути к выходу касается карты у кассы.</p></div>
+        <div class="ev hit"><time>через</time><span class="big">1 сек</span><p>Страница отзыва уже открыта.</p></div>
+        <div class="ev"><time>21:43</time><span class="stars">★★★★★</span><p>Отзыв в 2GIS оставлен ещё до такси.</p></div>
+      </div>
+    </div>
+    <div class="trio">
+      <div><b>Рейтинг растёт</b><p>В 2GIS и Google Картах начинают писать довольные гости, а не только недовольные.</p></div>
+      <div><b>Без уговоров</b><p>Официанту не нужно просить об отзыве: карта у кассы делает это деликатно.</p></div>
+      <div><b>В карточку своей точки</b><p>Каждая карта ведёт на страницу конкретного заведения или филиала.</p></div>
+    </div>
+    <p class="verdict">QR-код просит гостя остановиться. <span class="acc">NFC ловит его на ходу.</span></p>
+  </div>
+</section>
+
+<section class="scn" id="menu">
+  <div class="wrap">
+    <div class="scn-top">
+      <h2>Меню в одно касание</h2>
+      <div style="display:grid;gap:14px">
+        <span class="eyebrow mono">Сценарий Б · Электронное меню</span>
+        <p class="lead">Гость садится за стол, касается карты, и на его телефоне сразу открывается актуальное меню. Не нужно ждать официанта с потрёпанной книжкой или ловить камерой стёртый QR-код.</p>
+      </div>
+    </div>
+    <div class="lane">
+      <div class="lane-l"><span class="mono muted">Сейчас</span><b>Бумажное меню</b></div>
+      <div class="track">
+        <div class="ev"><time>19:00</time><p>Гость садится за стол. Меню нет.</p></div>
+        <div class="ev"><time>19:04</time><p>Ждёт, пока официант принесёт книжку.</p></div>
+        <div class="ev"><time>19:05</time><p>Затёртые страницы, старые цены, половины позиций уже нет.</p></div>
+        <div class="ev lost"><time>19:06</time><p>QR на столе стёрся и не считывается.</p></div>
+      </div>
+    </div>
+    <div class="lane">
+      <div class="lane-l"><span class="mono acc">С TAP</span><b>Меню на столе</b></div>
+      <div class="track">
+        <div class="ev"><time>19:00</time><p>Гость садится и видит карту в стиле заведения.</p></div>
+        <div class="ev hit"><time>касание</time><span class="big">0 ожидания</span><p>Меню уже на экране.</p></div>
+        <div class="ev"><time>всегда</time><p>Цены, сезонные позиции и стоп-лист как на кухне.</p></div>
+        <div class="ev"><time>19:02</time><p>Заказ выбран, пока официант подходит к столу.</p></div>
+      </div>
+    </div>
+    <div class="trio">
+      <div><b>Без перепечатки</b><p>Меню обновляется в вашем сервисе, карта на столе остаётся той же.</p></div>
+      <div><b>Свой экран</b><p>Гость листает меню на своём телефоне, а не в чужой книжке.</p></div>
+      <div><b>Время официантов</b><p>Официанты занимаются сервисом, а не разносят меню.</p></div>
+    </div>
+    <p class="verdict">Меню всегда под рукой. <span class="acc">Печать больше не нужна.</span></p>
+  </div>
+</section>
+
+<section class="scn" id="hall">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow mono">Где ставить карты</span>
+      <h2 class="h2">Пять точек касания в зале</h2>
+      <p class="lead">Карты отзывов стоят на пути гостя к двери, карты меню там, где он садится и ждёт. Нажмите на точку на плане зала.</p>
+    </div>
+    <div class="plan-grid">
+      <div>
+        <div class="hall">
+          <svg viewBox="0 0 600 420" role="img" aria-label="План зала с пятью точками касания">
+            <rect x="20" y="20" width="560" height="380" rx="14" fill="none" stroke="var(--line-2)" stroke-width="2"/>
+            <rect x="500" y="300" width="80" height="100" fill="var(--bg)" stroke="var(--line-2)" stroke-width="2"/>
+            <text class="lbl" x="540" y="390" text-anchor="middle">ВЫХОД</text>
+            <rect x="40" y="40" width="250" height="44" rx="8" fill="var(--surface)" stroke="var(--line)"/>
+            <text class="lbl" x="165" y="67" text-anchor="middle">БАРНАЯ СТОЙКА</text>
+            <rect x="380" y="40" width="180" height="60" rx="8" fill="var(--surface)" stroke="var(--line)"/>
+            <text class="lbl" x="470" y="75" text-anchor="middle">КАССА</text>
+            <g fill="var(--surface)" stroke="var(--line)">
+              <rect x="60" y="150" width="90" height="60" rx="8"/><rect x="190" y="150" width="90" height="60" rx="8"/>
+              <rect x="60" y="250" width="90" height="60" rx="8"/><rect x="190" y="250" width="90" height="60" rx="8"/>
+              <rect x="340" y="300" width="120" height="70" rx="20"/>
+            </g>
+            <text class="lbl" x="170" y="345" text-anchor="middle">СТОЛЫ</text>
+            <text class="lbl" x="400" y="290" text-anchor="middle">ОЖИДАНИЕ</text>
+            <path class="path" d="M120 230 C 300 230, 420 170, 470 120 M470 120 C 520 180, 540 250, 540 300"/>
+            <g class="pt r" data-i="0" tabindex="0" role="button" aria-label="Касса"><circle class="pulse" cx="470" cy="120" r="16"/><circle class="core" cx="470" cy="120" r="16"/><text x="470" y="124" text-anchor="middle">1</text></g>
+            <g class="pt r" data-i="1" tabindex="0" role="button" aria-label="Выход"><circle class="pulse" cx="540" cy="280" r="16"/><circle class="core" cx="540" cy="280" r="16"/><text x="540" y="284" text-anchor="middle">2</text></g>
+            <g class="pt" data-i="2" tabindex="0" role="button" aria-label="Стол"><circle class="pulse" cx="235" cy="180" r="16"/><circle class="core" cx="235" cy="180" r="16"/><text x="235" y="184" text-anchor="middle">3</text></g>
+            <g class="pt" data-i="3" tabindex="0" role="button" aria-label="Бар"><circle class="pulse" cx="120" cy="100" r="16"/><circle class="core" cx="120" cy="100" r="16"/><text x="120" y="104" text-anchor="middle">4</text></g>
+            <g class="pt" data-i="4" tabindex="0" role="button" aria-label="Зона ожидания"><circle class="pulse" cx="400" cy="335" r="16"/><circle class="core" cx="400" cy="335" r="16"/><text x="400" y="339" text-anchor="middle">5</text></g>
+          </svg>
+        </div>
+        <div class="legend mono"><span><i class="lg"></i>Отзывы</span><span><i class="lg m"></i>Меню</span><span>- - - путь гостя к выходу</span></div>
+      </div>
+      <div>
+        <div class="ptabs" role="tablist" aria-label="Точки касания">
+          <button class="ptab" role="tab" data-i="0"><i class="d"></i>Касса</button>
+          <button class="ptab" role="tab" data-i="1"><i class="d"></i>Выход</button>
+          <button class="ptab" role="tab" data-i="2"><i class="d m"></i>Стол</button>
+          <button class="ptab" role="tab" data-i="3"><i class="d m"></i>Бар</button>
+          <button class="ptab" role="tab" data-i="4"><i class="d m"></i>Ожидание</button>
+        </div>
+        <div class="pinfo" id="pinfo" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="scn" id="features">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow mono">После касания</span>
+      <h2 class="h2">Что видит гость на экране</h2>
+    </div>
+    <div class="feat">
+      <div class="ftabs" role="tablist" aria-label="Что открывает карта">
+        <button class="ftab" role="tab" aria-selected="true" data-v="rev"><span class="k">А</span><h3>Отзывы</h3><p>2GIS и Google Карты. Гость попадает сразу на страницу отзыва вашей точки, без поиска заведения в картах. Рейтинг растёт за счёт тех, кто раньше уходил молча.</p></button>
+        <button class="ftab" role="tab" aria-selected="false" data-v="menu"><span class="k">Б</span><h3>Меню</h3><p>Электронное меню открывается в ту же секунду. Новые цены, сезонные позиции и стоп-лист видны сразу, а заведение больше не тратится на печать.</p></button>
+        <button class="ftab" role="tab" aria-selected="false" data-v="soc"><span class="k">+</span><h3>Instagram и связь</h3><p>Дополнительно: Instagram, WhatsApp, Telegram, сайт или бронирование. Гость подписывается прямо за столом и возвращается чаще.</p></button>
+      </div>
+      <div class="phone">
+        <div class="scr">
+          <div class="island"></div>
+          <div class="view" data-v="rev">
+            <div class="v-top"><span>21:42</span><span>2gis.kz</span></div>
+            <span class="v-pill">Кофейня «Сезон» · филиал №3</span>
+            <div class="v-title">Как вам у нас сегодня?</div>
+            <div class="v-sub">Ваш отзыв помогает нам становиться лучше</div>
+            <div class="v-stars">★★★★★</div>
+            <div class="v-btn g"><span>Отзыв в 2GIS</span><span>→</span></div>
+            <div class="v-btn k"><span>Google Карты</span><span>→</span></div>
+          </div>
+          <div class="view" data-v="menu" hidden>
+            <div class="v-top"><span>19:05</span><span>menu.sezon.kz</span></div>
+            <span class="v-pill">Обновлено сегодня</span>
+            <div class="v-title">Меню</div>
+            <div class="v-row"><b>Капучино</b><span>1 400 ₸</span></div>
+            <div class="v-row"><b>Раф лаванда</b><span>1 900 ₸</span></div>
+            <div class="v-row"><b>Тыквенный латте</b><span>2 100 ₸</span></div>
+            <div class="v-row"><b>Круассан</b><span>1 100 ₸</span></div>
+            <div class="v-row"><b>Чизкейк</b><span>1 800 ₸</span></div>
+          </div>
+          <div class="view" data-v="soc" hidden style="text-align:center">
+            <div class="v-top"><span>19:40</span><span>instagram.com</span></div>
+            <div class="v-av"><div>С</div></div>
+            <div class="v-title">@sezon.coffee</div>
+            <div class="v-sub">Свежая обжарка каждую неделю</div>
+            <div class="v-btn ig"><span>Подписаться</span><span>→</span></div>
+            <div class="v-btn wa"><span>WhatsApp</span><span>→</span></div>
+            <div class="v-btn l"><span>Забронировать стол</span><span>→</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cfg-sec" id="design">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow mono">Дизайн под ключ</span>
+      <h2 class="h2">Ваш брендбук. Любая форма. Любой размер.</h2>
+      <p class="lead">Мы не продаём одинаковые таблички. Карта делается по фирменному стилю заведения и выглядит как часть интерьера. Соберите свой вариант и покрутите его.</p>
+    </div>
+    <div class="cfg">
+      <div class="stage" id="stage">
+        <div class="ghost" aria-hidden="true">BRAND</div>
+        <div class="card" id="card">
+          <div class="cm"><span id="cardName">TAP</span><small>NFC</small></div>
+          <div class="rings"><i></i><i></i><i></i></div>
+          <div class="cc"><b>Коснитесь телефоном</b><span>ОТЗЫВ · МЕНЮ · INSTAGRAM</span></div>
+        </div>
+        <span class="hint mono">Потяните, чтобы повернуть</span>
+      </div>
+      <div class="ctrls">
+        <div class="ctrl"><span class="mono muted">Форма</span>
+          <div class="chips" data-g="shape">
+            <button class="chip" aria-pressed="true" data-v="card">Классика</button>
+            <button class="chip" aria-pressed="false" data-v="round">Круг</button>
+            <button class="chip" aria-pressed="false" data-v="arch">Арка</button>
+            <button class="chip" aria-pressed="false" data-v="custom">Силуэт логотипа</button>
+          </div>
+        </div>
+        <div class="ctrl"><span class="mono muted">Размер</span>
+          <div class="chips" data-g="size">
+            <button class="chip" aria-pressed="false" data-v="s">Компакт</button>
+            <button class="chip" aria-pressed="true" data-v="m">Стандарт</button>
+            <button class="chip" aria-pressed="false" data-v="l">Тейбл-тент</button>
+          </div>
+        </div>
+        <div class="ctrl"><span class="mono muted">Цвет бренда</span>
+          <div class="chips" data-g="color">
+            <button class="sw" aria-pressed="true" aria-label="Чёрный" data-v="#141210|#f3efe8|#ff5a1f" style="background:#141210"></button>
+            <button class="sw" aria-pressed="false" aria-label="Молочный" data-v="#f2ede4|#141210|#ff5a1f" style="background:#f2ede4"></button>
+            <button class="sw" aria-pressed="false" aria-label="Оранжевый" data-v="#ff5a1f|#1a0700|#1a0700" style="background:#ff5a1f"></button>
+            <button class="sw" aria-pressed="false" aria-label="Тёмно-зелёный" data-v="#1f3d33|#e9e3d3|#ff5a1f" style="background:#1f3d33"></button>
+            <button class="sw" aria-pressed="false" aria-label="Бордовый" data-v="#5a1a22|#f3e6d8|#ffb08a" style="background:#5a1a22"></button>
+          </div>
+        </div>
+        <div class="ctrl"><span class="mono muted">Дизайн</span>
+          <div class="chips" data-g="art">
+            <button class="chip" aria-pressed="true" data-v="std">Готовый шаблон</button>
+            <button class="chip" aria-pressed="false" data-v="brand">Под мой брендбук</button>
+          </div>
+        </div>
+        <div class="price-live" aria-live="polite"><b id="price">5 000 ₸</b><span id="pnote">Стандартная карта с готовым дизайном</span></div>
+        <a class="btn btn-acc" href="https://wa.me/77756961602?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5%21%20%D0%A5%D0%BE%D1%87%D1%83%20%D0%B1%D0%B5%D1%81%D0%BF%D0%BB%D0%B0%D1%82%D0%BD%D1%8B%D0%B9%20%D0%BC%D0%B0%D0%BA%D0%B5%D1%82%20%D0%BA%D0%B0%D1%80%D1%82%D1%8B%20TAP%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B2%D0%BE%D0%B5%D0%B3%D0%BE%20%D0%B7%D0%B0%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D1%8F%3A%20" target="_blank" rel="noopener" style="justify-self:start">Хочу такую карту →</a>
+      </div>
+    </div>
+    <dl class="specs">
+      <div><dt>Технология</dt><dd>NFC, без батареек и зарядки</dd></div>
+      <div><dt>Совместимость</dt><dd>iPhone и большинство Android</dd></div>
+      <div><dt>Резерв</dt><dd>QR-код на обороте в стиле дизайна</dd></div>
+      <div><dt>Ссылка</dt><dd>Перенастраивается, если страница сменится</dd></div>
+      <div><dt>Форматы</dt><dd>Карта, тейбл-тент, настенная карта</dd></div>
+      <div><dt>Дизайн</dt><dd>Готовый шаблон или по брендбуку</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow mono">Цены</span>
+      <h2 class="h2">Две цены. Без скрытых платежей.</h2>
+    </div>
+    <div class="plans">
+      <div class="pl">
+        <div class="pl-top"><div><h3>Стандарт</h3><p class="muted">Готовое минималистичное решение</p></div></div>
+        <div class="cost">5 000<small>₸ / карта</small></div>
+        <ul>
+          <li>NFC-чип с настройкой ссылки</li>
+          <li>Отзывы или электронное меню</li>
+          <li>Аккуратный дизайн из нашей линейки</li>
+          <li class="no">Дизайн под брендбук</li>
+          <li class="no">Выбор формы и размера</li>
+        </ul>
+        <a class="btn btn-line" href="https://wa.me/77756961602?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5%21%20%D0%A5%D0%BE%D1%87%D1%83%20%D0%B1%D0%B5%D1%81%D0%BF%D0%BB%D0%B0%D1%82%D0%BD%D1%8B%D0%B9%20%D0%BC%D0%B0%D0%BA%D0%B5%D1%82%20%D0%BA%D0%B0%D1%80%D1%82%D1%8B%20TAP%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B2%D0%BE%D0%B5%D0%B3%D0%BE%20%D0%B7%D0%B0%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D1%8F%3A%20" target="_blank" rel="noopener">Заказать стандарт</a>
+      </div>
+      <div class="pl pro">
+        <div class="pl-top"><div><h3>Брендовая</h3><p class="muted">Для заведений, где важен стиль</p></div><span class="badge">Макет до оплаты</span></div>
+        <div class="cost">6 000<small>₸ / карта</small></div>
+        <ul>
+          <li>NFC-чип с настройкой ссылки</li>
+          <li>Отзывы или электронное меню</li>
+          <li>Эксклюзивный дизайн по брендбуку</li>
+          <li>Любая форма и размер</li>
+          <li>Резервный QR-код в стиле дизайна</li>
+          <li>Дизайн-концепция на согласование до оплаты</li>
+        </ul>
+        <a class="btn btn-acc" href="https://wa.me/77756961602?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5%21%20%D0%A5%D0%BE%D1%87%D1%83%20%D0%B1%D0%B5%D1%81%D0%BF%D0%BB%D0%B0%D1%82%D0%BD%D1%8B%D0%B9%20%D0%BC%D0%B0%D0%BA%D0%B5%D1%82%20%D0%BA%D0%B0%D1%80%D1%82%D1%8B%20TAP%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B2%D0%BE%D0%B5%D0%B3%D0%BE%20%D0%B7%D0%B0%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D1%8F%3A%20" target="_blank" rel="noopener">Получить макет бесплатно →</a>
+      </div>
+    </div>
+    <p class="delta"><b>+1 000 ₸</b><span>и карта выглядит как часть вашего бренда, а не как покупная табличка.</span></p>
+    <p class="delta"><b>3–4 дня</b><span>изготовление до 50 карт. От 100 карт — от 7 дней.</span></p>
+  </div>
+</section>
+
+<section class="scn" id="chains">
+  <div class="wrap ch">
+    <div class="ch-l">
+      <span class="eyebrow mono">Для сетей</span>
+      <h2>Один стиль на всю сеть. Отзывы в карточку каждой точки.</h2>
+      <p class="lead">Для сетей запускаем пилот на 1–2 точках: отзывы у кассы и меню на столах. Вы смотрите на результат и только потом решаете про всю сеть.</p>
+      <div class="invite" hidden>
+        <span class="mono muted">Текст для управляющего или маркетолога</span>
+        <p id="invite">Здравствуйте! Мы делаем NFC-карты для заведений и решаем две задачи. Первая — отзывы: гость касается карты у кассы по пути к выходу и сразу попадает на страницу отзывов вашей точки в 2GIS или Google, без уговоров со стороны официантов. Вторая — меню: гость садится за стол, касается карты, и на телефоне открывается актуальное электронное меню, без бумажных книжек и стёртых QR-кодов. Для вашей сети сделаем дизайн по брендбуку и отдельную ссылку для каждого филиала. Предлагаем подготовить дизайн-концепцию и запустить пилот на 1–2 точках. Можно показать вам визуализацию?</p>
+        <div class="copy-row"><button class="btn btn-line" id="copyBtn" type="button">Скопировать текст</button><span class="mono muted" id="copyMsg" aria-live="polite"></span></div>
+      </div>
+    </div>
+    <div class="ch-list">
+      <div><b>Единый дизайн для всех точек</b><p>Карты и тейбл-тенты в фирменном стиле сети, одинаковые в каждом филиале.</p></div>
+      <div><b>Своя ссылка для каждого филиала</b><p>Отзывы попадают в карточку конкретной точки в 2GIS и Google, а не в общую.</p></div>
+      <div><b>Меню на каждом столе</b><p>Одна ссылка на меню сети или отдельная для каждой точки.</p></div>
+      <div><b>Пилот без обязательств</b><p>Тест на 1–2 точках, решение о масштабе после результата.</p></div>
+      <div><b>Персональный менеджер</b><p>Условия для сетевых объёмов и карты для новых точек.</p></div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="head"><span class="eyebrow mono">Как мы работаем</span><h2 class="h2">От заявки до карт у кассы</h2></div>
+    <div class="steps">
+      <div><span class="mono">Шаг 1</span><h3>Бриф</h3><p>Изучаем брендбук, интерьер и задачи: отзывы, меню или обе сразу.</p></div>
+      <div><span class="mono">Шаг 2</span><h3>Дизайн-концепция</h3><p>Делаем дизайн и дорабатываем, пока вы его не утвердите.</p></div>
+      <div><span class="mono">Шаг 3</span><h3>Производство</h3><p>Изготавливаем, программируем и проверяем каждую карту.</p></div>
+      <div><span class="mono">Шаг 4</span><h3>Касания</h3><p>Карты отзывов у кассы и у выхода, карты меню на столах.</p></div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="head"><span class="eyebrow mono">Вопросы</span><h2 class="h2">Коротко о главном</h2></div>
+    <div class="faq">
+      <details><summary>Нужно ли гостю скачивать приложение?</summary><p>Нет. Страница открывается в браузере телефона сразу после касания.</p></details>
+      <details><summary>Сработает ли на любом телефоне?</summary><p>На iPhone и большинстве современных Android да. Для старых моделей на обороте карты есть резервный QR-код в стиле дизайна.</p></details>
+      <details><summary>Как обновлять меню?</summary><p>Карта ведёт на ссылку вашего электронного меню. Вы меняете меню в своём сервисе, а карта на столе всегда открывает актуальную версию.</p></details>
+      <details><summary>Сколько ждать карты?</summary><p>До 50 карт изготавливаем за 3–4 дня, заказ от 100 карт — от 7 дней. Макет вы видите и утверждаете до оплаты.</p></details>
+      <details><summary>У нас нет электронного меню. Карта подойдёт?</summary><p>Да, для отзывов меню не нужно. Карта меню просто открывает вашу ссылку, поэтому для неё нужно уже готовое электронное меню.</p></details>
+      <details><summary>Можно ли потом поменять ссылку?</summary><p>Да. Сообщите нам, и мы перенастроим карту на новую страницу.</p></details>
+      <details><summary>Сколько стоит дизайн?</summary><p>Дизайн по брендбуку уже входит в цену брендовой карты: 6 000 ₸. Концепцию вы видите и утверждаете до оплаты.</p></details>
+      <details><summary>Есть ли условия для сетей?</summary><p>Да. Для сетевых объёмов готовим отдельное предложение и запускаем пилот на 1–2 точках.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="final" id="contact">
+  <div class="wrap">
+    <div class="huge" aria-hidden="true">TAP.</div>
+    <div class="final-row">
+      <h2>Гость, который пообещал отзыв, оставит его. Гость за столом сразу увидит меню.</h2>
+      <div style="display:grid;gap:16px;justify-items:start">
+        <p style="max-width:36ch">Пришлите брендбук или логотип, и мы бесплатно подготовим дизайн-концепцию карты для вашего заведения.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-dark" href="https://wa.me/77756961602?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5%21%20%D0%A5%D0%BE%D1%87%D1%83%20%D0%B1%D0%B5%D1%81%D0%BF%D0%BB%D0%B0%D1%82%D0%BD%D1%8B%D0%B9%20%D0%BC%D0%B0%D0%BA%D0%B5%D1%82%20%D0%BA%D0%B0%D1%80%D1%82%D1%8B%20TAP%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B2%D0%BE%D0%B5%D0%B3%D0%BE%20%D0%B7%D0%B0%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D1%8F%3A%20" target="_blank" rel="noopener">Написать в WhatsApp →</a>
+        </div>
+      </div>
+    </div>
+    <div class="contacts mono">
+      <span>Телефон и WhatsApp<b>+7 (775) 696-16-02</b></span>
+      <span>Город<b>Астана</b></span>
+    </div>
+  </div>
+</section>
+</main>
+<a class="wa-fab" href="https://wa.me/77756961602?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5%21%20%D0%A5%D0%BE%D1%87%D1%83%20%D0%B1%D0%B5%D1%81%D0%BF%D0%BB%D0%B0%D1%82%D0%BD%D1%8B%D0%B9%20%D0%BC%D0%B0%D0%BA%D0%B5%D1%82%20%D0%BA%D0%B0%D1%80%D1%82%D1%8B%20TAP%20%D0%B4%D0%BB%D1%8F%20%D1%81%D0%B2%D0%BE%D0%B5%D0%B3%D0%BE%20%D0%B7%D0%B0%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D1%8F%3A%20" target="_blank" rel="noopener">Получить макет в WhatsApp →</a>
+<footer><div class="wrap mono"><span>© 2026 TAP</span><span>Цены в тенге за одну карту</span></div></footer>
+
+<script>
+(function(){
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* video chapters */
+  const v=document.getElementById('vid'), cbs=[...document.querySelectorAll('.chapters button')];
+  cbs.forEach(b=>b.addEventListener('click',()=>{v.currentTime=+b.dataset.t;const p=v.play();if(p&&p.catch)p.catch(()=>{})}));
+  v.addEventListener('timeupdate',()=>{let k=0;cbs.forEach((b,i)=>{if(v.currentTime>=+b.dataset.t-.05)k=i});cbs.forEach((b,i)=>b.classList.toggle('on',i===k))});
+
+  /* hall plan */
+  const P=[
+    {n:'Касса',r:1,h:'Касса: отзыв в момент оплаты',p:'Самый сильный момент для отзыва: гость доволен, расплатился и ещё стоит у стойки. Карта рядом с терминалом под рукой, официанту ничего не нужно просить.',m:[['Формат','Карта на подставке у терминала'],['Открывает','Страницу отзыва вашей точки'],['Где','На расстоянии вытянутой руки от терминала, логотипом к гостю']]},
+    {n:'Выход',r:1,h:'Выход: последний шанс',p:'Здесь уходит гость, который обещал «оставлю отзыв потом». Карта у двери ловит его на ходу: одно касание, и обещание выполнено.',m:[['Формат','Карта на стене у двери или гардероба'],['Открывает','Страницу отзыва вашей точки'],['Где','На уровне руки, по ходу движения к двери']]},
+    {n:'Стол',r:0,h:'Стол: меню без ожидания',p:'Гость садится и сразу видит, куда коснуться. Меню открывается в ту же секунду, без бумажной книжки и стёртого QR-кода.',m:[['Формат','Тейбл-тент на каждом столе'],['Открывает','Электронное меню заведения'],['Где','Лицевой стороной к гостям, резервный QR на обороте']]},
+    {n:'Бар',r:0,h:'Бар: выбор без очереди',p:'У стойки гость часто не знает, что заказать, и держит очередь. С картой он сам открывает меню напитков и подходит к бариста с готовым выбором.',m:[['Формат','Несколько карт вдоль стойки'],['Открывает','Меню напитков и десертов'],['Где','Через каждые 1–2 места']]},
+    {n:'Ожидание',r:0,h:'Зона ожидания: выбор заранее',p:'Пока гость ждёт столик, он уже выбирает заказ. За стол он садится готовым, и официант сразу принимает заказ.',m:[['Формат','Тейбл-тент или карта на стене'],['Открывает','Меню, можно добавить Instagram'],['Где','Рядом с табличкой «Ожидайте, вас посадят»']]}
+  ];
+  const info=document.getElementById('pinfo'), pts=[...document.querySelectorAll('.pt')], tabs=[...document.querySelectorAll('.ptab')];
+  function sel(i){
+    const s=P[i];
+    info.innerHTML=`<span class="tag ${s.r?'r':''}">${s.r?'Сценарий А · Отзывы':'Сценарий Б · Меню'}</span><h3>${s.h}</h3><p>${s.p}</p><dl>${s.m.map(x=>`<div><dt>${x[0]}</dt><dd>${x[1]}</dd></div>`).join('')}</dl>`;
+    pts.forEach((g,k)=>g.classList.toggle('on',k===i));
+    tabs.forEach((t,k)=>t.setAttribute('aria-selected',k===i?'true':'false'));
+  }
+  pts.forEach(g=>{g.addEventListener('click',()=>sel(+g.dataset.i));g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();sel(+g.dataset.i)}})});
+  tabs.forEach(t=>t.addEventListener('click',()=>sel(+t.dataset.i)));
+  sel(0);
+
+  /* phone tabs */
+  const ft=[...document.querySelectorAll('.ftab')], views=[...document.querySelectorAll('.view')], order=['rev','menu','soc'];
+  let fi=0, timer=null;
+  function show(vv){ft.forEach(t=>t.setAttribute('aria-selected',t.dataset.v===vv?'true':'false'));views.forEach(x=>x.hidden=x.dataset.v!==vv);fi=order.indexOf(vv)}
+  ft.forEach(t=>t.addEventListener('click',()=>{clearInterval(timer);show(t.dataset.v)}));
+  if(!reduce) timer=setInterval(()=>show(order[(fi+1)%3]),5000);
+
+  /* configurator */
+  const card=document.getElementById('card'), st={shape:'card',size:'m',color:'#141210|#f3efe8|#ff5a1f',art:'std'};
+  const shapes={card:{r:'20px',clip:'none',k:1.55},round:{r:'50%',clip:'none',k:1},arch:{r:'999px 999px 20px 20px',clip:'none',k:1.35},custom:{r:'0',clip:'polygon(50% 0,93% 18%,100% 62%,74% 100%,26% 100%,0 62%,7% 18%)',k:1.12}};
+  const sizes={s:180,m:220,l:262};
+  function render(){
+    const sh=shapes[st.shape], f=innerWidth<500?.8:1, w=sizes[st.size]*f, [c,ink,dot]=st.color.split('|');
+    card.style.setProperty('--w',w+'px');card.style.setProperty('--h',w*sh.k+'px');card.style.setProperty('--r',sh.r);card.style.setProperty('--clip',sh.clip);
+    card.style.setProperty('--c',c);card.style.setProperty('--ink',ink);card.style.setProperty('--dot',dot);
+    document.getElementById('cardName').textContent=st.art==='brand'?'Ваш лого':'TAP';
+    const custom=st.art==='brand'||st.shape!=='card'||st.size!=='m';
+    document.getElementById('price').textContent=custom?'6 000 ₸':'5 000 ₸';
+    document.getElementById('pnote').textContent=custom?'Брендовая карта: дизайн, форма и размер под вас':'Стандартная карта с готовым дизайном';
+  }
+  document.querySelectorAll('[data-g]').forEach(g=>g.addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b)return;
+    g.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));
+    st[g.dataset.g]=b.dataset.v;render();
+  }));
+  addEventListener('resize',render);render();
+  const stage=document.getElementById('stage');
+  let ry=-16, rx=8, drag=false, lx=0, ly=0, idle=!reduce;
+  const set=()=>{card.style.setProperty('--ry',ry+'deg');card.style.setProperty('--rx',rx+'deg')};
+  stage.addEventListener('pointerdown',e=>{drag=true;idle=false;lx=e.clientX;ly=e.clientY;stage.setPointerCapture(e.pointerId)});
+  stage.addEventListener('pointermove',e=>{if(!drag)return;ry+=(e.clientX-lx)*.6;rx=Math.max(-35,Math.min(35,rx-(e.clientY-ly)*.4));lx=e.clientX;ly=e.clientY;set()});
+  ['pointerup','pointercancel'].forEach(t=>stage.addEventListener(t,()=>{drag=false;setTimeout(()=>{if(!drag&&!reduce)idle=true},2500)}));
+  stage.style.touchAction='pan-y';
+  (function loop(){if(idle){ry=-16+Math.sin(performance.now()/1400)*18;set()}requestAnimationFrame(loop)})();
+
+  /* copy invite */
+  const cb=document.getElementById('copyBtn'), cm=document.getElementById('copyMsg'), inv=document.getElementById('invite');
+  cb.addEventListener('click',()=>{
+    const fb=()=>{const r=document.createRange();r.selectNodeContents(inv);const s=getSelection();s.removeAllRanges();s.addRange(r);cm.textContent='Текст выделен, нажмите Ctrl+C'};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(inv.textContent).then(()=>{cm.textContent='Скопировано'},fb);else fb();
+  });
+})();
+</script>
+</body>
+</html>
